@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login - BookHive</title>
+    <link href="https://cdn.jsdelivr.net/npm/[email protected]/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container mt-5">
+    <h2>Login to BookHive</h2>
+    <form method="POST" style="max-width: 400px;">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Login</button>
+    </form>
+    <p class="mt-3">Don't have an account? <a href="{% url 'signup' %}">Sign up here</a></p>
+    {% if user.is_authenticated %}
+    <p>Hello, {{ user.username }}!</p>
+    <a href="{% url 'logout' %}" class="btn btn-outline-danger">Logout</a>
+{% else %}
+    <a href="{% url 'login' %}" class="btn btn-primary">Login</a>
+    <a href="{% url 'signup' %}" class="btn btn-outline-primary">Sign Up</a>
+{% endif %}
+</body>
+</html>
