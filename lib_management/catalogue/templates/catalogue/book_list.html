@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BookHive Catalogue</title>
+    <link href="https://cdn.jsdelivr.net/npm/[email protected]/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container mt-4">
+    <h1 class="mb-4">BookHive Catalogue</h1>
+
+    <div class="row">
+        {% for book in books %}
+        <div class="col-md-3 mb-4">
+            <div class="card h-100">
+                {% if book.cover_url %}
+                    <img src="{{ book.cover_url }}" class="card-img-top" alt="{{ book.title }}" style="height: 220px; object-fit: contain;">
+                {% endif %}
+                <div class="card-body">
+                    <h6 class="card-title">{{ book.title }}</h6>
+                    <p class="card-text text-muted" style="font-size: 0.85rem;">{{ book.authors }}</p>
+                    <span class="badge bg-secondary">{{ book.genre }}</span>
+                    <p class="mt-2">⭐ {{ book.goodreads_rating }}</p>
+                    <p>₹{{ book.rental_price }} — Stock: {{ book.stock }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

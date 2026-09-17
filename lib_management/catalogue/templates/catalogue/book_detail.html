@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><h6 class="card-title">
+    <a href="{% url 'book_detail' book.pk %}" class="text-decoration-none text-dark">{{ book.title }}</a>
+</h6></title>
+    <link href="https://cdn.jsdelivr.net/npm/[email protected]/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container mt-4">
+    <a href="{% url 'book_list' %}" class="btn btn-outline-secondary btn-sm mb-3">&larr; Back to Catalogue</a>
+
+    <div class="row">
+        <div class="col-md-3">
+            {% if book.cover_url %}
+                <img src="{{ book.cover_url }}" class="img-fluid" alt="{{ book.title }}">
+            {% endif %}
+        </div>
+        <div class="col-md-9">
+            <h2>{{ book.title }}</h2>
+            <p class="text-muted">by {{ book.authors }}</p>
+            <span class="badge bg-secondary">{{ book.genre }}</span>
+            <p class="mt-3">⭐ {{ book.goodreads_rating }} (Goodreads) &nbsp; | &nbsp; Your customers' rating: {{ book.avg_rating }}</p>
+            <p><strong>₹{{ book.rental_price }}</strong> per rental — {{ book.stock }} in stock</p>
+
+            <h5 class="mt-4">Description</h5>
+            <p>{{ book.description }}</p>
+        </div>
+    </div>
+</body>
+</html>
