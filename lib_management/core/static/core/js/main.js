@@ -143,42 +143,167 @@ function escapeXml(unsafe) {
 }
 
 /* ==========================================================================
-   4. Live Search & Client-side Filter
+   4. Live Search & Autocomplete across Author and Book Title
    ========================================================================== */
 function initLiveSearch() {
   const searchInput = document.getElementById('catalogueSearchInput');
   const bookCards = document.querySelectorAll('.book-card-col');
   const emptyState = document.getElementById('noResultsState');
   const countDisplay = document.getElementById('resultsCount');
+  const searchBySelect = document.querySelector('select[name="search_by"]');
 
-  if (!searchInput || bookCards.length === 0) return;
+  if (searchInput && bookCards.length > 0) {
+    const performClientFilter = () => {
+      const query = searchInput.value.toLowerCase().trim();
+      const searchTarget = searchBySelect ? searchBySelect.value : 'all';
+      const terms = query.split(/\s+/).filter(Boolean);
+      let visibleCount = 0;
 
-  searchInput.addEventListener('input', (e) => {
-    const query = e.target.value.toLowerCase().trim();
-    let visibleCount = 0;
+      bookCards.forEach((card) => {
+        const title = (card.getAttribute('data-title') || '').toLowerCase();
+        const author = (card.getAttribute('data-author') || '').toLowerCase();
 
-    bookCards.forEach((card) => {
-      const title = card.getAttribute('data-title')?.toLowerCase() || '';
-      const author = card.getAttribute('data-author')?.toLowerCase() || '';
-      const genre = card.getAttribute('data-genre')?.toLowerCase() || '';
+        let matches = true;
 
-      const matches = !query || title.includes(query) || author.includes(query) || genre.includes(query);
-      if (matches) {
-        card.style.display = '';
-        visibleCount++;
-      } else {
-        card.style.display = 'none';
+        if (terms.length > 0) {
+          if (searchTarget === 'title') {
+            matches = terms.every((term) => title.includes(term));
+          } else if (searchTarget === 'author') {
+            matches = terms.every((term) => author.includes(term));
+          } else {
+            // 'all': matches either in title or author
+            matches = terms.every((term) => title.includes(term) || author.includes(term));
+          }
+        }
+
+        if (matches) {
+          card.style.display = '';
+          visibleCount++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      if (countDisplay) {
+        countDisplay.textContent = visibleCount;
+      }
+
+      if (emptyState) {
+        emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+      }
+    };
+
+    searchInput.addEventListener('input', performClientFilter);
+    if (searchBySelect) {
+      searchBySelect.addEventListener('change', performClientFilter);
+    }
+  }
+
+  // Initialize Autocomplete suggestions for all search bars (navbar and catalogue)
+  initAutocompleteSearch();
+}
+
+function initAutocompleteSearch() {
+  const searchInputs = document.querySelectorAll('.search-autocomplete-input');
+
+  searchInputs.forEach((input) => {
+    const parentContainer = input.closest('.search-input-wrapper') || input.closest('.nav-search-form');
+    if (!parentContainer) return;
+
+    const dropdown = parentContainer.querySelector('.search-autocomplete-dropdown');
+    if (!dropdown) return;
+
+    let debounceTimer = null;
+
+    input.addEventListener('input', (e) => {
+      clearTimeout(debounceTimer);
+      const query = e.target.value.trim();
+
+      if (query.length < 2) {
+        dropdown.classList.remove('active');
+        dropdown.innerHTML = '';
+        return;
+      }
+
+      debounceTimer = setTimeout(() => {
+        const searchBySelect = document.querySelector('select[name="search_by"]');
+        const searchBy = searchBySelect ? searchBySelect.value : 'all';
+
+        fetch(`/books/api/search/?q=${encodeURIComponent(query)}&search_by=${encodeURIComponent(searchBy)}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (!data.results || data.results.length === 0) {
+              dropdown.innerHTML = `
+                <div style="padding: 1rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+                  No books or authors found for "<strong>${escapeXml(query)}</strong>"
+                </div>
+              `;
+              dropdown.classList.add('active');
+              return;
+            }
+
+            let html = '';
+            data.results.forEach((book) => {
+              const highlightedTitle = highlightMatch(book.title, query);
+              const highlightedAuthor = highlightMatch(book.authors, query);
+              const coverImg = book.cover_url 
+                ? `<img src="${book.cover_url}" class="suggestion-thumb" alt="${escapeXml(book.title)}">` 
+                : `<div class="suggestion-thumb" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem;">📖</div>`;
+
+              html += `
+                <a href="/books/${book.id}/" class="search-suggestion-item">
+                  ${coverImg}
+                  <div class="suggestion-info">
+                    <div class="suggestion-title">${highlightedTitle}</div>
+                    <div class="suggestion-author">by ${highlightedAuthor}</div>
+                  </div>
+                  <div class="suggestion-meta">
+                    <span style="color: #B45309; font-weight: 700;">⭐ ${book.rating}</span>
+                    <span style="color: var(--accent-primary); font-weight: 800;">₹${book.price}</span>
+                  </div>
+                </a>
+              `;
+            });
+
+            html += `
+              <a href="/books/?q=${encodeURIComponent(query)}&search_by=${encodeURIComponent(searchBy)}" class="suggestion-view-all">
+                View all results for "${escapeXml(query)}" &rarr;
+              </a>
+            `;
+
+            dropdown.innerHTML = html;
+            dropdown.classList.add('active');
+          })
+          .catch((err) => {
+            console.error('Search API error:', err);
+          });
+      }, 180);
+    });
+
+    // Close on Escape or click outside
+    document.addEventListener('click', (e) => {
+      if (!parentContainer.contains(e.target)) {
+        dropdown.classList.remove('active');
       }
     });
 
-    if (countDisplay) {
-      countDisplay.textContent = visibleCount;
-    }
-
-    if (emptyState) {
-      emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
-    }
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        dropdown.classList.remove('active');
+      }
+    });
   });
+}
+
+function highlightMatch(text, query) {
+  if (!text || !query) return escapeXml(text || '');
+  const terms = query.split(/\s+/).filter(Boolean);
+  let escapedText = escapeXml(text);
+  terms.forEach((term) => {
+    const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    escapedText = escapedText.replace(regex, '<strong style="color: var(--accent-primary);">$1</strong>');
+  });
+  return escapedText;
 }
 
 /* ==========================================================================

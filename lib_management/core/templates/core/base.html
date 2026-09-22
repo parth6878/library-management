@@ -38,6 +38,23 @@
                     </li>
                 </ul>
 
+                <!-- Global Search Bar in Navbar -->
+                <div class="nav-search-container" id="navSearchContainer">
+                    <form action="{% url 'book_list' %}" method="get" class="nav-search-form" id="navSearchForm">
+                        <span class="nav-search-icon">🔍</span>
+                        <input 
+                            type="text" 
+                            name="q" 
+                            class="nav-search-input search-autocomplete-input" 
+                            placeholder="Search by title or author..." 
+                            value="{% if request.resolver_match.url_name != 'book_list' %}{{ query }}{% endif %}"
+                            autocomplete="off"
+                            aria-label="Search by title or author"
+                        >
+                        <div class="search-autocomplete-dropdown"></div>
+                    </form>
+                </div>
+
                 <!-- User Auth Actions -->
                 <div class="nav-actions">
                     {% if user.is_authenticated %}

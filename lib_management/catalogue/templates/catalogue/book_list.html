@@ -19,18 +19,29 @@
         <!-- Search & Filters Container -->
         <div class="catalogue-controls">
             <!-- Search & Sort Row -->
-            <form method="get" action="{% url 'book_list' %}" style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                <div class="search-input-wrapper" style="flex: 1; min-width: 260px;">
-                    <span class="search-icon">🔍</span>
-                    <input 
-                        type="text" 
-                        name="q" 
-                        id="catalogueSearchInput" 
-                        class="catalogue-search-input" 
-                        placeholder="Live search by title, author, or genre..." 
-                        value="{{ query }}"
-                        autocomplete="off"
-                    >
+            <form method="get" action="{% url 'book_list' %}" style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: stretch;">
+                <div style="display: flex; flex: 1; min-width: 300px; position: relative;">
+                    <!-- Filter Target: Title & Author / Title / Author -->
+                    <select name="search_by" class="warm-select" style="width: auto; min-width: 155px; border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: none;" aria-label="Search target">
+                        <option value="all" {% if search_by == 'all' or not search_by %}selected{% endif %}>📚 Title & Author</option>
+                        <option value="title" {% if search_by == 'title' %}selected{% endif %}>📖 Title Only</option>
+                        <option value="author" {% if search_by == 'author' %}selected{% endif %}>✍️ Author Only</option>
+                    </select>
+
+                    <div class="search-input-wrapper" style="flex: 1; position: relative;">
+                        <span class="search-icon">🔍</span>
+                        <input 
+                            type="text" 
+                            name="q" 
+                            id="catalogueSearchInput" 
+                            class="catalogue-search-input search-autocomplete-input" 
+                            placeholder="Type an author name or book title..." 
+                            value="{{ query }}"
+                            autocomplete="off"
+                            style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
+                        >
+                        <div class="search-autocomplete-dropdown"></div>
+                    </div>
                 </div>
 
                 {% if selected_genre %}
@@ -153,8 +164,8 @@
     {% if page_obj.has_other_pages %}
     <div class="pagination-wrapper">
         {% if page_obj.has_previous %}
-            <a href="?page=1{% if query %}&q={{ query }}{% endif %}{% if selected_genre %}&genre={{ selected_genre }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="pagination-item" title="First page">&laquo;</a>
-            <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_genre %}&genre={{ selected_genre }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="pagination-item" title="Previous page">&lsaquo;</a>
+            <a href="?page=1{% if query %}&q={{ query }}{% endif %}{% if search_by %}&search_by={{ search_by }}{% endif %}{% if selected_genre %}&genre={{ selected_genre }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="pagination-item" title="First page">&laquo;</a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if search_by %}&search_by={{ search_by }}{% endif %}{% if selected_genre %}&genre={{ selected_genre }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="pagination-item" title="Previous page">&lsaquo;</a>
         {% else %}
             <span class="pagination-item disabled">&laquo;</span>
             <span class="pagination-item disabled">&lsaquo;</span>
@@ -165,14 +176,14 @@
                 {% if page_obj.number == p %}
                     <span class="pagination-item active">{{ p }}</span>
                 {% else %}
-                    <a href="?page={{ p }}{% if query %}&q={{ query }}{% endif %}{% if selected_genre %}&genre={{ selected_genre }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="pagination-item">{{ p }}</a>
+                    <a href="?page={{ p }}{% if query %}&q={{ query }}{% endif %}{% if search_by %}&search_by={{ search_by }}{% endif %}{% if selected_genre %}&genre={{ selected_genre }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="pagination-item">{{ p }}</a>
                 {% endif %}
             {% endif %}
         {% endfor %}
 
         {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_genre %}&genre={{ selected_genre }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="pagination-item" title="Next page">&rsaquo;</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if selected_genre %}&genre={{ selected_genre }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="pagination-item" title="Last page">&raquo;</a>
+            <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if search_by %}&search_by={{ search_by }}{% endif %}{% if selected_genre %}&genre={{ selected_genre }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="pagination-item" title="Next page">&rsaquo;</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if search_by %}&search_by={{ search_by }}{% endif %}{% if selected_genre %}&genre={{ selected_genre }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="pagination-item" title="Last page">&raquo;</a>
         {% else %}
             <span class="pagination-item disabled">&rsaquo;</span>
             <span class="pagination-item disabled">&raquo;</span>
