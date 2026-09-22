@@ -1,29 +1,183 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>BookHive Catalogue</title>
-    <link href="https://cdn.jsdelivr.net/npm/[email protected]/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="container mt-4">
-    <h1 class="mb-4">BookHive Catalogue</h1>
+{% extends 'core/base.html' %}
+{% load static %}
 
-    <div class="row">
-        {% for book in books %}
-        <div class="col-md-3 mb-4">
-            <div class="card h-100">
-                {% if book.cover_url %}
-                    <img src="{{ book.cover_url }}" class="card-img-top" alt="{{ book.title }}" style="height: 220px; object-fit: contain;">
+{% block title %}Catalogue — BookHive Library{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'catalogue/css/catalogue.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Catalogue Header Section -->
+<section class="catalogue-header">
+    <div class="page-container">
+        <div class="catalogue-title-area">
+            <h1>The Hive Collection</h1>
+            <p>Browse, discover, and rent from our carefully preserved collection of world-class literature.</p>
+        </div>
+
+        <!-- Search & Filters Container -->
+        <div class="catalogue-controls">
+            <!-- Search & Sort Row -->
+            <form method="get" action="{% url 'book_list' %}" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <div class="search-input-wrapper" style="flex: 1; min-width: 260px;">
+                    <span class="search-icon">🔍</span>
+                    <input 
+                        type="text" 
+                        name="q" 
+                        id="catalogueSearchInput" 
+                        class="catalogue-search-input" 
+                        placeholder="Live search by title, author, or genre..." 
+                        value="{{ query }}"
+                        autocomplete="off"
+                    >
+                </div>
+
+                {% if selected_genre %}
+                    <input type="hidden" name="genre" value="{{ selected_genre }}">
                 {% endif %}
-                <div class="card-body">
-                    <h6 class="card-title">{{ book.title }}</h6>
-                    <p class="card-text text-muted" style="font-size: 0.85rem;">{{ book.authors }}</p>
-                    <span class="badge bg-secondary">{{ book.genre }}</span>
-                    <p class="mt-2">⭐ {{ book.goodreads_rating }}</p>
-                    <p>₹{{ book.rental_price }} — Stock: {{ book.stock }}</p>
+
+                <select name="sort" class="warm-select" style="width: auto; min-width: 170px;" onchange="this.form.submit()">
+                    <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>⭐ Highest Rated</option>
+                    <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>₹ Lowest Rental</option>
+                    <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>₹ Highest Rental</option>
+                    <option value="title" {% if sort_by == 'title' %}selected{% endif %}>🔤 Title (A-Z)</option>
+                </select>
+
+                <button type="submit" class="btn-warm btn-warm-primary">Search</button>
+                {% if query or selected_genre %}
+                    <a href="{% url 'book_list' %}" class="btn-warm btn-warm-secondary" title="Clear all filters">Reset</a>
+                {% endif %}
+            </form>
+
+            <!-- Genre Filter Pills -->
+            <div class="genre-pills-bar">
+                <a href="{% url 'book_list' %}{% if query %}?q={{ query }}{% endif %}" 
+                   class="genre-filter-pill {% if not selected_genre %}active{% endif %}">
+                    All Shelves
+                </a>
+                {% for g in genres %}
+                <a href="{% url 'book_list' %}?genre={{ g|urlencode }}{% if query %}&q={{ query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" 
+                   class="genre-filter-pill {% if selected_genre == g %}active{% endif %}">
+                    {{ g }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Books Listing Section -->
+<div class="page-container">
+    <!-- Results Counter Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem;">
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Showing <strong style="color: var(--text-main);" id="resultsCount">{{ page_obj.paginator.count }}</strong> available book{{ page_obj.paginator.count|pluralize }}
+            {% if selected_genre %}in <span class="badge-warm badge-genre">{{ selected_genre }}</span>{% endif %}
+            {% if query %}matching "<em>{{ query }}</em>"{% endif %}
+        </p>
+
+        {% if page_obj.paginator.num_pages > 1 %}
+        <span style="font-size: 0.85rem; color: var(--text-light);">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+        {% endif %}
+    </div>
+
+    <!-- Books Grid -->
+    <div class="book-grid" id="booksGrid">
+        {% for book in books %}
+        <div class="book-card book-card-col" data-title="{{ book.title }}" data-author="{{ book.authors }}" data-genre="{{ book.genre }}">
+            <!-- Cover image container with stock badge -->
+            <div class="book-card-cover">
+                {% if book.cover_url %}
+                    <img src="{{ book.cover_url }}" alt="{{ book.title }}" class="book-cover-img" loading="lazy">
+                {% else %}
+                    <div style="font-size: 3.5rem;">📖</div>
+                {% endif %}
+
+                {% if book.stock > 2 %}
+                    <span class="book-stock-badge in-stock">In Stock ({{ book.stock }})</span>
+                {% elif book.stock > 0 %}
+                    <span class="book-stock-badge low-stock">Only {{ book.stock }} Left</span>
+                {% else %}
+                    <span class="book-stock-badge out-stock">Unavailable</span>
+                {% endif %}
+            </div>
+
+            <!-- Card Content -->
+            <div class="book-card-body">
+                <span class="badge-warm badge-genre book-card-genre">{{ book.genre|default:"General" }}</span>
+                <h2 class="book-card-title">
+                    <a href="{% url 'book_detail' book.pk %}" title="{{ book.title }}">{{ book.title }}</a>
+                </h2>
+                <p class="book-card-author">by {{ book.authors|default:"Unknown Author" }}</p>
+
+                <!-- Rating and Price Meta -->
+                <div class="book-card-meta">
+                    <div class="book-rating" title="Goodreads Rating">
+                        ⭐ {{ book.goodreads_rating|default:"4.0" }}
+                    </div>
+                    <div class="book-price-tag">
+                        <span class="book-price-amount">₹{{ book.rental_price }}</span>
+                        <span class="book-price-period">per rental</span>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <div class="book-card-action">
+                    <a href="{% url 'book_detail' book.pk %}" class="btn-warm btn-warm-outline btn-warm-sm" style="width: 100%;">
+                        View Details &rarr;
+                    </a>
                 </div>
             </div>
         </div>
+        {% empty %}
+        <div class="empty-results-state" id="noResultsState">
+            <div class="icon">🔍</div>
+            <h3>No books found in this shelf</h3>
+            <p>We couldn't find any titles matching your search criteria. Try a different title, author, or clear your filters.</p>
+            <a href="{% url 'book_list' %}" class="btn-warm btn-warm-primary">Browse All Books</a>
+        </div>
         {% endfor %}
     </div>
-</body>
-</html>
+
+    <!-- Hidden state for client-side search filtering if no card matches -->
+    <div class="empty-results-state" id="noResultsState" style="display: none;">
+        <div class="icon">🔍</div>
+        <h3>No matching books found</h3>
+        <p>Try searching with another keyword or author name.</p>
+    </div>
+
+    <!-- Pagination Controls -->
+    {% if page_obj.has_other_pages %}
+    <div class="pagination-wrapper">
+        {% if page_obj.has_previous %}
+            <a href="?page=1{% if query %}&q={{ query }}{% endif %}{% if selected_genre %}&genre={{ selected_genre }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="pagination-item" title="First page">&laquo;</a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_genre %}&genre={{ selected_genre }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="pagination-item" title="Previous page">&lsaquo;</a>
+        {% else %}
+            <span class="pagination-item disabled">&laquo;</span>
+            <span class="pagination-item disabled">&lsaquo;</span>
+        {% endif %}
+
+        {% for p in page_obj.paginator.page_range %}
+            {% if p >= page_obj.number|add:"-2" and p <= page_obj.number|add:"2" %}
+                {% if page_obj.number == p %}
+                    <span class="pagination-item active">{{ p }}</span>
+                {% else %}
+                    <a href="?page={{ p }}{% if query %}&q={{ query }}{% endif %}{% if selected_genre %}&genre={{ selected_genre }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="pagination-item">{{ p }}</a>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_genre %}&genre={{ selected_genre }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="pagination-item" title="Next page">&rsaquo;</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if selected_genre %}&genre={{ selected_genre }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="pagination-item" title="Last page">&raquo;</a>
+        {% else %}
+            <span class="pagination-item disabled">&rsaquo;</span>
+            <span class="pagination-item disabled">&raquo;</span>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

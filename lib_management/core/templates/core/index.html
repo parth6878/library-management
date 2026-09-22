@@ -1,11 +1,457 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
-</head>
-<body>
-    <p>This is the home page</p>
-</body>
-</html>
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}BookHive — Your Warm Haven for Books{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'catalogue/css/catalogue.css' %}">
+<style>
+    /* Home Hero Styles */
+    .home-hero {
+        background: radial-gradient(circle at 80% 20%, #F5E5D0 0%, #FAF6F0 60%);
+        padding: 4.5rem 0 3.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 3.5rem;
+        align-items: center;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.35rem 0.95rem;
+        background: #FEF3C7;
+        color: #B45309;
+        border: 1px solid #FDE68A;
+        border-radius: var(--radius-full);
+        font-size: 0.82rem;
+        font-weight: 700;
+        margin-bottom: 1.25rem;
+    }
+
+    .hero-title {
+        font-family: var(--font-serif);
+        font-size: 3.25rem;
+        line-height: 1.18;
+        color: var(--text-main);
+        margin-bottom: 1.25rem;
+        letter-spacing: -0.02em;
+    }
+
+    .hero-title em {
+        color: var(--accent-primary);
+        font-style: italic;
+    }
+
+    .hero-subtitle {
+        font-size: 1.12rem;
+        color: var(--text-muted);
+        line-height: 1.65;
+        margin-bottom: 2rem;
+        max-width: 540px;
+    }
+
+    .hero-search-box {
+        display: flex;
+        align-items: center;
+        background: var(--bg-surface-elevated);
+        border: 1.5px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        padding: 0.4rem 0.5rem 0.4rem 1.25rem;
+        box-shadow: var(--shadow-sm);
+        max-width: 520px;
+        margin-bottom: 1.5rem;
+    }
+
+    .hero-search-box input {
+        border: none;
+        background: transparent;
+        font-size: 0.98rem;
+        font-family: var(--font-sans);
+        color: var(--text-main);
+        flex: 1;
+        outline: none;
+    }
+
+    .hero-search-box input::placeholder {
+        color: var(--text-light);
+    }
+
+    /* Hero Book Showcase Graphic */
+    .hero-visual-card {
+        position: relative;
+        background: linear-gradient(135deg, #FFF9F2 0%, #F5EAE0 100%);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-xl);
+        padding: 2.25rem;
+        box-shadow: var(--shadow-lg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .hero-floating-quote {
+        background: var(--bg-surface-elevated);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        padding: 1rem 1.25rem;
+        box-shadow: var(--shadow-md);
+        font-size: 0.88rem;
+        font-style: italic;
+        color: var(--text-muted);
+        margin-top: 1.25rem;
+        width: 100%;
+    }
+
+    /* Stats Ribbon */
+    .stats-section {
+        background: var(--bg-surface-elevated);
+        border-top: 1px solid var(--border-subtle);
+        border-bottom: 1px solid var(--border-subtle);
+        padding: 2.25rem 0;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+        text-align: center;
+    }
+
+    .stat-number {
+        font-family: var(--font-serif);
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: var(--accent-primary);
+        line-height: 1.2;
+    }
+
+    .stat-label {
+        font-size: 0.88rem;
+        color: var(--text-muted);
+        font-weight: 500;
+        margin-top: 0.25rem;
+    }
+
+    /* Features Section */
+    .features-section {
+        padding: 4.5rem 0;
+    }
+
+    .section-header {
+        text-align: center;
+        max-width: 620px;
+        margin: 0 auto 3rem;
+    }
+
+    .section-header h2 {
+        font-family: var(--font-serif);
+        font-size: 2.2rem;
+        color: var(--text-main);
+        margin-bottom: 0.75rem;
+    }
+
+    .section-header p {
+        font-size: 1.02rem;
+        color: var(--text-muted);
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.75rem;
+    }
+
+    .feature-card {
+        background: var(--bg-surface-elevated);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+    }
+
+    .feature-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--border-medium);
+    }
+
+    .feature-icon-bubble {
+        width: 52px;
+        height: 52px;
+        border-radius: var(--radius-md);
+        background: var(--accent-primary-light);
+        color: var(--accent-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .feature-card h4 {
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin-bottom: 0.6rem;
+        color: var(--text-main);
+    }
+
+    .feature-card p {
+        font-size: 0.92rem;
+        color: var(--text-muted);
+        line-height: 1.6;
+    }
+
+    /* Genre Tags Section */
+    .genres-section {
+        padding: 3rem 0 4rem;
+        background: var(--bg-subtle);
+        border-radius: var(--radius-xl);
+        margin: 2rem 0;
+        text-align: center;
+    }
+
+    .genre-tag-cloud {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: center;
+        max-width: 780px;
+        margin: 1.5rem auto 0;
+        padding: 0 1rem;
+    }
+
+    .genre-tag-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.6rem 1.35rem;
+        background: var(--bg-surface-elevated);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-full);
+        font-size: 0.92rem;
+        font-weight: 600;
+        color: var(--text-main);
+        text-decoration: none;
+        transition: all var(--transition-fast);
+        box-shadow: var(--shadow-xs);
+    }
+
+    .genre-tag-chip:hover {
+        background: var(--accent-primary);
+        color: #FFFFFF !important;
+        border-color: var(--accent-primary);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    @media (max-width: 900px) {
+        .hero-grid {
+            grid-template-columns: 1fr;
+            text-align: center;
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+        }
+
+        .hero-subtitle {
+            margin: 0 auto 1.75rem;
+        }
+
+        .hero-search-box {
+            margin: 0 auto 1.5rem;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+        }
+
+        .features-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="home-hero">
+    <div class="page-container">
+        <div class="hero-grid">
+            <div class="hero-text-content">
+                <span class="hero-badge">🍯 Warm Literary Sanctuary</span>
+                <h1 class="hero-title">
+                    Discover, rent, & cherish books in our <em>cozy hive</em>.
+                </h1>
+                <p class="hero-subtitle">
+                    Immerse yourself in over {{ total_books }} handpicked stories and scholarly treasures. Flexible rentals, verified community reviews, and effortless returns designed for genuine readers.
+                </p>
+
+                <!-- Search form directly linked to catalogue -->
+                <form action="{% url 'book_list' %}" method="get" class="hero-search-box">
+                    <input type="text" name="q" placeholder="Search by title, author, or genre..." aria-label="Search books">
+                    <button type="submit" class="btn-warm btn-warm-primary btn-warm-sm">Explore Books</button>
+                </form>
+
+                <div style="display: flex; gap: 0.85rem; align-items: center; flex-wrap: wrap;">
+                    <a href="{% url 'book_list' %}" class="btn-warm btn-warm-primary btn-warm-lg">Browse Catalogue &rarr;</a>
+                    {% if not user.is_authenticated %}
+                        <a href="{% url 'signup' %}" class="btn-warm btn-warm-secondary btn-warm-lg">Join BookHive</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Hero Visual Highlight -->
+            <div class="hero-visual-card">
+                <div style="font-size: 3.5rem; margin-bottom: 0.75rem;">📚</div>
+                <h3 style="font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 0.5rem;">Curated for Your Soul</h3>
+                <p style="font-size: 0.92rem; color: var(--text-muted); max-width: 320px;">
+                    Hand-inspected editions, high reader ratings, and low daily rental fees from ₹50.
+                </p>
+
+                <div class="hero-floating-quote">
+                    “A reader lives a thousand lives before he dies. The man who never reads lives only one.”
+                    <div style="font-weight: 700; color: var(--accent-primary); margin-top: 0.4rem; font-style: normal; font-size: 0.8rem;">— George R.R. Martin</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Ribbon -->
+<section class="stats-section">
+    <div class="page-container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{{ total_books }}+</div>
+                <div class="stat-label">Curated Titles Available</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">₹50</div>
+                <div class="stat-label">Accessible Starting Rental</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">4.8 ★</div>
+                <div class="stat-label">Average Reader Rating</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">100%</div>
+                <div class="stat-label">On-Time Return Guarantee</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Books Section -->
+{% if featured_books %}
+<section style="padding: 4.5rem 0;">
+    <div class="page-container">
+        <div class="section-header">
+            <h2>Highest-Rated in the Hive</h2>
+            <p>Community favourites and critically acclaimed masterpieces ready for your reading nook.</p>
+        </div>
+
+        <div class="book-grid">
+            {% for book in featured_books %}
+            <div class="book-card book-card-col" data-title="{{ book.title }}" data-author="{{ book.authors }}" data-genre="{{ book.genre }}">
+                <div class="book-card-cover">
+                    {% if book.cover_url %}
+                        <img src="{{ book.cover_url }}" alt="{{ book.title }}" class="book-cover-img" loading="lazy">
+                    {% else %}
+                        <div style="font-size: 3rem;">📖</div>
+                    {% endif %}
+                    
+                    {% if book.stock > 2 %}
+                        <span class="book-stock-badge in-stock">In Stock ({{ book.stock }})</span>
+                    {% elif book.stock > 0 %}
+                        <span class="book-stock-badge low-stock">Only {{ book.stock }} Left</span>
+                    {% else %}
+                        <span class="book-stock-badge out-stock">Reserved</span>
+                    {% endif %}
+                </div>
+
+                <div class="book-card-body">
+                    <span class="badge-warm badge-genre book-card-genre">{{ book.genre|default:"General" }}</span>
+                    <h3 class="book-card-title">
+                        <a href="{% url 'book_detail' book.pk %}">{{ book.title }}</a>
+                    </h3>
+                    <p class="book-card-author">by {{ book.authors|default:"Unknown Author" }}</p>
+
+                    <div class="book-card-meta">
+                        <div class="book-rating" title="Goodreads Rating">
+                            ⭐ {{ book.goodreads_rating|default:"4.0" }}
+                        </div>
+                        <div class="book-price-tag">
+                            <span class="book-price-amount">₹{{ book.rental_price }}</span>
+                            <span class="book-price-period">per rental</span>
+                        </div>
+                    </div>
+
+                    <div class="book-card-action">
+                        <a href="{% url 'book_detail' book.pk %}" class="btn-warm btn-warm-outline btn-warm-sm">View Details &rarr;</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div style="text-align: center; margin-top: 3rem;">
+            <a href="{% url 'book_list' %}" class="btn-warm btn-warm-primary btn-warm-lg">Explore Full Catalogue ({{ total_books }} Books) &rarr;</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Popular Genres Discovery Section -->
+{% if genres %}
+<section class="page-container">
+    <div class="genres-section">
+        <h2 style="font-family: var(--font-serif); font-size: 1.85rem; color: var(--text-main); margin-bottom: 0.5rem;">Explore by Literary Genre</h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Jump directly into the shelves that match your current mood</p>
+
+        <div class="genre-tag-cloud">
+            <a href="{% url 'book_list' %}" class="genre-tag-chip">🌟 All Genres</a>
+            {% for g in genres %}
+                <a href="{% url 'book_list' %}?genre={{ g|urlencode }}" class="genre-tag-chip">{{ g }}</a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Features / Value Proposition -->
+<section class="features-section">
+    <div class="page-container">
+        <div class="section-header">
+            <h2>Why Readers Love BookHive</h2>
+            <p>Thoughtfully designed for avid bookworms and casual story-lovers alike.</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon-bubble">📚</div>
+                <h4>Curated Book Selection</h4>
+                <p>Hundreds of meticulously selected titles across fiction, non-fiction, memoirs, and academic disciplines.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon-bubble">💸</div>
+                <h4>Pocket-Friendly Rentals</h4>
+                <p>Read without committing to the full purchase price. Affordable rental periods beginning at just ₹50.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon-bubble">🛡️</div>
+                <h4>Reader Reliability Score</h4>
+                <p>Build your community reputation with on-time returns to unlock extended rentals and priority book holds.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

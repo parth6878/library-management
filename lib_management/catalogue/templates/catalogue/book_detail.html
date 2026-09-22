@@ -1,30 +1,184 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title><h6 class="card-title">
-    <a href="{% url 'book_detail' book.pk %}" class="text-decoration-none text-dark">{{ book.title }}</a>
-</h6></title>
-    <link href="https://cdn.jsdelivr.net/npm/[email protected]/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="container mt-4">
-    <a href="{% url 'book_list' %}" class="btn btn-outline-secondary btn-sm mb-3">&larr; Back to Catalogue</a>
+{% extends 'core/base.html' %}
+{% load static %}
 
-    <div class="row">
-        <div class="col-md-3">
-            {% if book.cover_url %}
-                <img src="{{ book.cover_url }}" class="img-fluid" alt="{{ book.title }}">
-            {% endif %}
-        </div>
-        <div class="col-md-9">
-            <h2>{{ book.title }}</h2>
-            <p class="text-muted">by {{ book.authors }}</p>
-            <span class="badge bg-secondary">{{ book.genre }}</span>
-            <p class="mt-3">⭐ {{ book.goodreads_rating }} (Goodreads) &nbsp; | &nbsp; Your customers' rating: {{ book.avg_rating }}</p>
-            <p><strong>₹{{ book.rental_price }}</strong> per rental — {{ book.stock }} in stock</p>
+{% block title %}{{ book.title }} — BookHive{% endblock %}
 
-            <h5 class="mt-4">Description</h5>
-            <p>{{ book.description }}</p>
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'catalogue/css/catalogue.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <!-- Breadcrumb Navigation -->
+    <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+        <a href="{% url 'index' %}">Home</a>
+        <span>&rsaquo;</span>
+        <a href="{% url 'book_list' %}">Catalogue</a>
+        <span>&rsaquo;</span>
+        <span style="color: var(--text-main); font-weight: 600;">{{ book.title|truncatechars:40 }}</span>
+    </nav>
+
+    <!-- Back Action -->
+    <div style="margin-bottom: 1.5rem;">
+        <a href="{% url 'book_list' %}" class="btn-warm btn-warm-secondary btn-warm-sm">
+            &larr; Back to Catalogue
+        </a>
+    </div>
+
+    <!-- Main Detail Card -->
+    <div class="book-detail-wrapper">
+        <div class="book-detail-grid">
+            <!-- Left Column: Cover & Quick Specs -->
+            <div class="detail-cover-showcase">
+                <div class="detail-cover-frame">
+                    {% if book.cover_url %}
+                        <img src="{{ book.cover_url }}" alt="{{ book.title }}" class="detail-cover-img">
+                    {% else %}
+                        <div style="font-size: 5rem; padding: 3rem 0;">📖</div>
+                    {% endif %}
+                </div>
+
+                <div class="detail-quick-specs">
+                    <div class="spec-item">
+                        <span class="spec-label">Availability</span>
+                        <span class="spec-value">
+                            {% if book.stock > 2 %}
+                                <span class="badge-warm badge-success">In Stock ({{ book.stock }})</span>
+                            {% elif book.stock > 0 %}
+                                <span class="badge-warm badge-warning">Only {{ book.stock }} Left</span>
+                            {% else %}
+                                <span class="badge-warm badge-warning" style="background: #FEE2E2; color: #991B1B;">Reserved</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Genre</span>
+                        <span class="spec-value">{{ book.genre|default:"General" }}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Hive Catalog ID</span>
+                        <span class="spec-value">#{{ book.pk }}</span>
+                    </div>
+                </div>
+
+                <!-- Rent CTA in Left Column -->
+                <div style="width: 100%; max-width: 280px; margin-top: 1.25rem;">
+                    {% if book.stock > 0 %}
+                        <button type="button" class="btn-warm btn-warm-primary btn-rent-trigger" data-book-title="{{ book.title }}" style="width: 100%; font-size: 1rem; padding: 0.85rem;">
+                            🍯 Rent Now for ₹{{ book.rental_price }}
+                        </button>
+                    {% else %}
+                        <button type="button" class="btn-warm btn-warm-secondary" disabled style="width: 100%; opacity: 0.6; cursor: not-allowed;">
+                            Currently Checked Out
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Right Column: Title, Author, Description & Ratings -->
+            <div class="detail-info-pane">
+                <span class="badge-warm badge-genre detail-genre-badge">{{ book.genre|default:"General Literature" }}</span>
+                <h1 class="detail-book-title">{{ book.title }}</h1>
+                <p class="detail-book-author">by <strong>{{ book.authors|default:"Unknown Author" }}</strong></p>
+
+                <!-- Dual Ratings Display -->
+                <div class="detail-ratings-bar">
+                    <div class="rating-box">
+                        <div class="rating-score">⭐ {{ book.goodreads_rating|default:"0.0" }}<span>/5</span></div>
+                        <div class="rating-meta">
+                            <strong>Goodreads</strong>
+                            <div>Global Community Score</div>
+                        </div>
+                    </div>
+
+                    <div class="rating-box">
+                        <div class="rating-score">👥 {{ book.avg_rating|default:"0.0" }}<span>/5</span></div>
+                        <div class="rating-meta">
+                            <strong>BookHive Readers</strong>
+                            <div>Verified Patron Rating</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing & Policy Card -->
+                <div class="detail-pricing-box">
+                    <div class="pricing-info">
+                        <div class="price-tag">₹{{ book.rental_price }}</div>
+                        <div class="rental-term">Standard rental period &bull; Free renewal eligible</div>
+                    </div>
+                    <div>
+                        <span class="badge-warm badge-success">✓ Inspected & Sanitized</span>
+                    </div>
+                </div>
+
+                <!-- Book Description -->
+                <div class="detail-description-section">
+                    <h3>About This Book</h3>
+                    <div class="detail-description-text">
+                        {% if book.description %}
+                            <p>{{ book.description|linebreaksbr }}</p>
+                        {% else %}
+                            <p style="font-style: italic; color: var(--text-light);">
+                                No detailed synopsis has been catalogued yet for this volume. Please refer to Goodreads or check the physical edition in the library hive.
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Rental Policies Ribbon -->
+                <div style="background: var(--bg-subtle); border-radius: var(--radius-md); padding: 1.25rem; border: 1px solid var(--border-subtle); margin-top: auto;">
+                    <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.88rem; color: var(--text-muted);">
+                        <div>📅 <strong>14-Day Lending Window</strong></div>
+                        <div>🔄 <strong>Hassle-free Returns</strong></div>
+                        <div>⭐ <strong>+10 Reliability Score on on-time return</strong></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</body>
-</html>
+
+    <!-- Related Books from Same Genre -->
+    {% if related_books %}
+    <section style="margin-top: 4rem; margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem;">
+            <div>
+                <h3 style="font-family: var(--font-serif); font-size: 1.6rem; color: var(--text-main);">More in {{ book.genre }}</h3>
+                <p style="color: var(--text-muted); font-size: 0.92rem;">Other readers who borrowed this book also enjoyed these</p>
+            </div>
+            <a href="{% url 'book_list' %}?genre={{ book.genre|urlencode }}" class="btn-warm btn-warm-outline btn-warm-sm">
+                View All {{ book.genre }} &rarr;
+            </a>
+        </div>
+
+        <div class="book-grid">
+            {% for r_book in related_books %}
+            <div class="book-card">
+                <div class="book-card-cover" style="height: 200px;">
+                    {% if r_book.cover_url %}
+                        <img src="{{ r_book.cover_url }}" alt="{{ r_book.title }}" class="book-cover-img" loading="lazy">
+                    {% else %}
+                        <div style="font-size: 2.5rem;">📖</div>
+                    {% endif %}
+                </div>
+                <div class="book-card-body">
+                    <h4 class="book-card-title" style="font-size: 0.95rem; height: 2.4rem;">
+                        <a href="{% url 'book_detail' r_book.pk %}">{{ r_book.title }}</a>
+                    </h4>
+                    <p class="book-card-author">{{ r_book.authors }}</p>
+                    <div class="book-card-meta">
+                        <div class="book-rating" style="font-size: 0.8rem;">⭐ {{ r_book.goodreads_rating }}</div>
+                        <div class="book-price-tag">
+                            <span class="book-price-amount" style="font-size: 1rem;">₹{{ r_book.rental_price }}</span>
+                        </div>
+                    </div>
+                    <div class="book-card-action">
+                        <a href="{% url 'book_detail' r_book.pk %}" class="btn-warm btn-warm-outline btn-warm-sm">View Details &rarr;</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BookHive — Your Warm Haven for Books{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Core Warm Stylesheet -->
+    <link rel="stylesheet" href="{% static 'core/css/style.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- Warm Sticky Navigation Bar -->
+    <header class="warm-navbar">
+        <div class="page-container">
+            <div class="navbar-inner">
+                <!-- Brand Logo -->
+                <a href="{% url 'index' %}" class="brand-logo" id="brandLogo">
+                    <span class="brand-icon">🍯</span>
+                    <span class="brand-name">Book<span>Hive</span></span>
+                </a>
+
+                <!-- Navigation Links -->
+                <ul class="nav-links" id="mainNavLinks">
+                    <li>
+                        <a href="{% url 'index' %}" class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}">Home</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'book_list' %}" class="nav-link {% if 'book' in request.resolver_match.url_name %}active{% endif %}">Catalogue</a>
+                    </li>
+                </ul>
+
+                <!-- User Auth Actions -->
+                <div class="nav-actions">
+                    {% if user.is_authenticated %}
+                        <div class="user-badge" title="Logged in as {{ user.username }}">
+                            <span class="user-avatar">{{ user.username|slice:":1"|upper }}</span>
+                            <span>{{ user.username }}</span>
+                        </div>
+                        <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-warm btn-warm-danger btn-warm-sm" id="logoutBtn">Logout</button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn-warm btn-warm-outline btn-warm-sm" id="loginNavBtn">Login</a>
+                        <a href="{% url 'signup' %}" class="btn-warm btn-warm-primary btn-warm-sm" id="signupNavBtn">Sign Up</a>
+                    {% endif %}
+                    
+                    <!-- Mobile Hamburger -->
+                    <button class="mobile-nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">☰</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Django Flash Messages -->
+        {% if messages %}
+            <div class="page-container">
+                <div class="messages-container" id="djangoMessages">
+                    {% for message in messages %}
+                        <div class="warm-alert warm-alert-{{ message.tags|default:'info' }}">
+                            <span>{{ message }}</span>
+                            <button type="button" class="alert-close" aria-label="Dismiss alert">&times;</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Warm Aesthetic Footer -->
+    <footer class="warm-footer">
+        <div class="page-container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="{% url 'index' %}" class="brand-logo">
+                        <span class="brand-icon">🍯</span>
+                        <span class="brand-name">Book<span>Hive</span></span>
+                    </a>
+                    <p>A cozy literary sanctuary providing thoughtfully curated books and smooth rentals for passionate readers everywhere.</p>
+                </div>
+                <div class="footer-col">
+                    <h5>Explore</h5>
+                    <ul class="footer-links">
+                        <li><a href="{% url 'index' %}">Home</a></li>
+                        <li><a href="{% url 'book_list' %}">Browse Catalogue</a></li>
+                        <li><a href="{% url 'book_list' %}?q=Fiction">Fiction Collection</a></li>
+                        <li><a href="{% url 'book_list' %}?q=Science">Science & Tech</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h5>Account</h5>
+                    <ul class="footer-links">
+                        {% if user.is_authenticated %}
+                            <li><span style="color: var(--text-muted);">Signed in as {{ user.username }}</span></li>
+                            <li><a href="{% url 'book_list' %}">My Library</a></li>
+                        {% else %}
+                            <li><a href="{% url 'login' %}">Sign In</a></li>
+                            <li><a href="{% url 'signup' %}">Create Free Account</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h5>Trust & Rentals</h5>
+                    <ul class="footer-links">
+                        <li><span>🛡️ Verified Reliability Score</span></li>
+                        <li><span>📦 Easy Returns</span></li>
+                        <li><span>⭐ Goodreads Sync</span></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; {% now "Y" %} BookHive Library Management. Crafted with warmth for readers.</p>
+                <p>Curated Stories &bull; Peaceful Reading</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Core Interactive JavaScript -->
+    <script src="{% static 'core/js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

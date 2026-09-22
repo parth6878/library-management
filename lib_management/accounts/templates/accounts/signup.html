@@ -1,15 +1,47 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Sign Up - BookHive</title>
-    <link href="https://cdn.jsdelivr.net/npm/[email protected]/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="container mt-5">
-    <h2>Create your BookHive account</h2>
-    <form method="POST" style="max-width: 400px;">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Sign Up</button>
-    </form>
-</body>
-</html>
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Create Account — BookHive Library{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'accounts/css/accounts.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <!-- Header -->
+            <div class="auth-header">
+                <div class="auth-badge-icon">🍯</div>
+                <h2>Join the Hive</h2>
+                <p>Create your reader account to start borrowing books and tracking your reading journey.</p>
+            </div>
+
+            <!-- Form -->
+            <form method="POST" class="auth-form django-form" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <ul class="errorlist">
+                        {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                {{ form.as_p }}
+
+                <button type="submit" class="btn-warm btn-warm-primary btn-warm-lg" id="signupSubmitBtn">
+                    Create Reader Account &rarr;
+                </button>
+            </form>
+
+            <!-- Footer Switch -->
+            <div class="auth-footer">
+                Already registered with BookHive? <a href="{% url 'login' %}">Sign in here</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
